@@ -1,0 +1,44 @@
+name: 'Publish Lambda Layer'
+description: 'Publish a Lambda Layer to AWS based on a requirements.txt'
+inputs:
+  aws-access-key-id:
+   description: 'AWS access key id'
+   required: true
+  aws-secret-access-key:
+   description: 'AWS secret access key'
+   required: true
+  aws-default-region:
+    description: 'AWS default region'
+    required: false
+    default: 'us-east-1'
+  working-directory:
+    description: 'The relative path of a directory containing the requirements.txt'
+    required: false
+    default: './'
+  layer-name:
+    description: 'The name of the layer'
+    required: true
+    default: ''
+  python-runtime:
+    description: 'The compatible python runtime, e.g.: python3.8'
+    required: false
+    default: 'python3.8'
+  additional-python-runtimes:
+    description: 'A space-delimited list of additional compatible python runtimes, e.g.: python3.7 python3.6'
+    required: false
+    default: ''
+outputs:
+  output:
+    description: 'The output of aws lambda publish-layer-version in compact JSON format (https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html#output)'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+    AWS_DEFAULT_REGION: ${{ inputs.aws-default-region }}
+  args:
+    - ${{ inputs.working-directory }}
+    - ${{ inputs.layer-name }}
+    - ${{ inputs.python-runtime }}
+    - ${{ inputs.additional-python-runtimes }}
