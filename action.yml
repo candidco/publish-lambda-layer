@@ -20,9 +20,9 @@ inputs:
     required: true
     default: ''
   python-runtime:
-    description: 'The compatible python runtime, e.g.: python3.8'
+    description: 'The compatible python runtime, e.g.: python3.9'
     required: false
-    default: 'python3.8'
+    default: 'python3.9'
   additional-python-runtimes:
     description: 'A space-delimited list of additional compatible python runtimes, e.g.: python3.7 python3.6'
     required: false

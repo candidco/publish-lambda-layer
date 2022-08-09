@@ -26,7 +26,7 @@ This action takes a requirements.txt file, creates a .zip package with python de
 
 ### `python-runtime`
 
-**Optional** The compatible python runtime. Default `'python3.8'`.
+**Optional** The compatible python runtime. Default `'python3.9'`.
 
 ### `additional-python-runtimes`
 
