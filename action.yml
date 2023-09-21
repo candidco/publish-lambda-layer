@@ -30,15 +30,54 @@ inputs:
 outputs:
   output:
     description: 'The output of aws lambda publish-layer-version in compact JSON format (https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html#output)'
+    value: ${{ steps.publish-layer.outputs.output }}
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  env:
-    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
-    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
-    AWS_DEFAULT_REGION: ${{ inputs.aws-default-region }}
-  args:
-    - ${{ inputs.working-directory }}
-    - ${{ inputs.layer-name }}
-    - ${{ inputs.python-runtime }}
-    - ${{ inputs.additional-python-runtimes }}
+  using: 'composite'
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set Python version
+      id: set-python-version
+      shell: bash
+      run: |
+        python_version=$(echo ${{ inputs.python-runtime }} | sed 's/python//g')
+        echo "python_version=${python_version}" >> $GITHUB_OUTPUT
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ steps.set-python-version.outputs.python_version }}
+
+    - name: Create Layer Bundle
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PYTHON_VERSION: ${{ steps.set-python-version.outputs.python_version }}
+      shell: bash
+      run: |
+        pip install -r requirements.txt -t python/lib/${PYTHON_VERSION}/site-packages/
+        zip -r layer.zip python > /dev/null
+   
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-default-region }}
+    
+    - name: Publish Lambda Layer to AWS
+      working-directory: ${{ inputs.working-directory }}
+      id: publish-layer
+      env:
+        LAYER_NAME: ${{ inputs.layer-name }}
+        RUNTIME: ${{ inputs.python-runtime }}
+        ADDITIONAL_RUNTIMES: ${{ inputs.additional-python-runtimes }} 
+      shell: bash
+      run: |
+        aws lambda publish-layer-version \
+          --layer-name $LAYER_NAME \
+          --zip-file fileb://layer.zip \
+          --compatible-runtimes $RUNTIME $ADDITIONAL_RUNTIMES \
+          | jq --compact-output '.' > publish-layer-output.json
+
+        echo "output=$(cat publish-layer-output.json)" >> $GITHUB_OUTPUT
