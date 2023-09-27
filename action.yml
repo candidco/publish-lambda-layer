@@ -44,18 +44,26 @@ runs:
         python_version=$(echo ${{ inputs.python-runtime }} | sed 's/python//g')
         echo "python_version=${python_version}" >> $GITHUB_OUTPUT
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ steps.set-python-version.outputs.python_version }}
-
     - name: Create Layer Bundle
       working-directory: ${{ inputs.working-directory }}
-      env:
-        PYTHON_VERSION: ${{ steps.set-python-version.outputs.python_version }}
       shell: bash
+      env:
+        python_runtimes: ${{ inputs.python-runtime }} ${{ inputs.additional-python-runtimes }}
       run: |
-        pip install -r requirements.txt -t python/lib/${PYTHON_VERSION}/site-packages/
+        # Install pyenv 
+        curl https://pyenv.run | bash
+        echo 'export PATH="/root/.pyenv/bin:$PATH"' >> $GITHUB_ENV
+        echo 'eval "$(pyenv init -)"' >> $GITHUB_ENV
+        echo 'eval "$(pyenv virtualenv-init -)"' >> $GITHUB_ENV
+        source $GITHUB_ENV
+
+        for runtime in $python_runtimes; do
+          python_version=$(echo ${runtime} | sed 's/python//g')
+          pyenv install $python_version
+          pyenv use $python_version
+          pip install -r requirements.txt -t python/lib/$runtime/site-packages/
+        done
+
         zip -r layer.zip python > /dev/null
    
     - name: Configure AWS Credentials
