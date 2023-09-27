@@ -57,7 +57,7 @@ runs:
         for runtime in $python_runtimes; do
           python_version=$(echo ${runtime} | sed 's/python//g')
           pyenv install $python_version
-          pyenv use $python_version
+          pyenv local $python_version
           pip install -r requirements.txt -t python/lib/$runtime/site-packages/
         done
 
