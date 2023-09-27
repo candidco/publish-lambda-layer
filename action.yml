@@ -37,14 +37,7 @@ runs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Set Python version
-      id: set-python-version
-      shell: bash
-      run: |
-        python_version=$(echo ${{ inputs.python-runtime }} | sed 's/python//g')
-        echo "python_version=${python_version}" >> $GITHUB_OUTPUT
-
-    - name: Create Layer Bundle
+    - name: Create Layer Bundles
       working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
@@ -54,6 +47,7 @@ runs:
         curl https://pyenv.run | bash
         export PATH="$HOME/.pyenv/bin:$PATH"
 
+        # Create a bundle per supported runtime
         for runtime in $python_runtimes; do
           python_version=$(echo ${runtime} | sed 's/python//g')
           pyenv install $python_version
