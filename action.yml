@@ -52,10 +52,7 @@ runs:
       run: |
         # Install pyenv 
         curl https://pyenv.run | bash
-        echo 'export PATH="/root/.pyenv/bin:$PATH"' >> $GITHUB_ENV
-        echo 'eval "$(pyenv init -)"' >> $GITHUB_ENV
-        echo 'eval "$(pyenv virtualenv-init -)"' >> $GITHUB_ENV
-        source $GITHUB_ENV
+        export PATH="$HOME/.pyenv/bin:$PATH"
 
         for runtime in $python_runtimes; do
           python_version=$(echo ${runtime} | sed 's/python//g')
